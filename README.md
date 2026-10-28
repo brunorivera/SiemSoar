@@ -1,6 +1,6 @@
 # 🛡️ SIEM & SOAR Automático (Fase 1: Motor Lógico y Datos)
 **Proyecto de Tesis:** Análisis Automatizado de Registros y Detección de Anomalías
-**Autor:** Juan Cruz Pereyra Muñoz
+**Autores:** Juan Cruz Pereyra Muñoz y Bruno Rivera Garetti
 
 ## 📝 Descripción
 Este repositorio contiene el código fuente de la lógica principal y la arquitectura de datos para un sistema de Gestión de Eventos de Seguridad (SIEM) y Respuesta Automatizada (SOAR), diseñado para integrarse con la plataforma **n8n**.

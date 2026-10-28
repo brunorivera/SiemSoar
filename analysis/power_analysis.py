@@ -1,5 +1,5 @@
-# _power_analysis.py — D-1: efecto y potencia para justificar n=10 por brazo
-# Corre: python _power_analysis.py  (usa solo stdlib; datos de lab/results/*_e1.jsonl)
+# power_analysis.py — efecto y potencia para justificar n=10 por brazo
+# Corre: python analysis/power_analysis.py  (solo stdlib; usa la repetición E1 v2)
 import json, random, math, sys
 from itertools import combinations
 from pathlib import Path
@@ -7,14 +7,17 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
 
 RES = Path(__file__).resolve().parents[1] / "lab" / "results"
-N_ARM = 10
 
 
 def load(arm):
-    recs = [json.loads(l) for l in (RES / f"{arm}_e1.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
-    recs.sort(key=lambda r: r["episode"])
-    mttd = [r["MTTD"] for r in recs if r.get("detected") and r.get("MTTD") is not None]
-    mttr = [r["MTTR"] for r in recs if r.get("contained") and r.get("MTTR") is not None]
+    """Carga la repetición E1 (v2); si no existe, usa la campaña original."""
+    path = RES / f"{arm}_e1_v2.jsonl"
+    if not path.exists():
+        path = RES / f"{arm}_e1.jsonl"
+    recs = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    recs.sort(key=lambda r: r.get("episode", 0))
+    mttd = [float(r["MTTD"]) for r in recs if r.get("detected") and r.get("MTTD") is not None]
+    mttr = [float(r["MTTR"]) for r in recs if r.get("contained") and r.get("MTTR") is not None]
     return mttd, mttr
 
 
@@ -111,7 +114,7 @@ def power_curve(n=10):
     z_alpha = 1.959963984540054
     sigma_u = math.sqrt(n * n * (2 * n + 1) / 12.0)
     out = []
-    for A in (0.6, 0.7, 0.8, 0.9, 0.95, 1.0):
+    for A in (0.6, 0.7, 0.8, 0.85, 0.88, 0.9, 0.95, 1.0):
         z_eff = abs(A - 0.5) * n * n / sigma_u
         pwr = 0.5 * math.erfc((z_alpha - z_eff) / math.sqrt(2.0))
         out.append((A, pwr))
@@ -122,24 +125,30 @@ if __name__ == "__main__":
     n8n_mttd, n8n_mttr = load("n8n")
     f2b_mttd, f2b_mttr = load("f2b")
 
-    print("=" * 70)
-    print("D-1 · ANÁLISIS DE EFECTO Y POTENCIA (piloto E1, n=10 por brazo)")
-    print("=" * 70)
+    print("=" * 78)
+    print("ANÁLISIS DE EFECTO Y POTENCIA (repetición E1, n=10 por brazo)")
+    print("=" * 78)
+    observed = {}
     for name, x, y in (("MTTD", n8n_mttd, f2b_mttd), ("MTTR", n8n_mttr, f2b_mttr)):
         A = a12(x, y)
         lo, hi = boot_a12_ci(x, y)
         U, mU, p_ex = mannwhitney_exact(x, y)
         pw = boot_power(x, y)
-        print(f"\n--- {name} (n8n vs f2b) ---")
-        print(f"  A12 (n8n>f2b) = {A:.3f}  |  IC95% bootstrap = [{lo:.3f}, {hi:.3f}]  (10 000 réplicas)")
+        observed[name] = (A, p_ex, pw)
+        print(f"\n--- {name} (n8n vs Fail2ban) ---")
+        print(f"  A12 (n8n>Fail2ban) = {A:.3f}  |  IC95% bootstrap = [{lo:.3f}, {hi:.3f}]  (10 000 réplicas)")
         print(f"  Mann-Whitney exacto: U = {U:.1f} (H0 esperado {mU:.1f}), p = {p_ex:.4e}")
         print(f"  Potencia estimada (bootstrap, α=0.05 bilateral, 5 000 réplicas) = {pw:.3f}")
 
     print("\n--- Curva de potencia asintótica para n = 10 por brazo ---")
     for A, pwr in power_curve(10):
         print(f"  A12 = {A:.2f} → potencia ≈ {pwr:.3f}")
-    print("\nNota: con separación completa (A12 = 1.0) el test exacto rechaza H0")
-    print("siempre que no haya empates entre brazos; p exacto observado = 1.08e-05.")
-    print("\nConclusión: n = 10 por brazo alcanza potencia ≥ 0.85 incluso para")
-    print("efectos conservadores (A12 ≥ 0.9) y ≈ 0.97 para el efecto observado;")
-    print("extender a n = 30 aporta poco margen adicional de detección de diferencia.")
+
+    a_mttd, p_mttd, pw_mttd = observed["MTTD"]
+    print("\nLectura:")
+    print(f"  El efecto observado en MTTD es A12 = {a_mttd:.3f} (p exacto = {p_mttd:.2e});")
+    print(f"  la potencia bootstrap para ese efecto es {pw_mttd:.3f}.")
+    print("  Con n = 10 por brazo, la potencia asintótica llega a 0,80 recién alrededor")
+    print("  de A12 ≈ 0,88; para A12 = 0,90 es ≈ 0,86 y para A12 = 1,0 es ≈ 0,97.")
+    print("  Por eso no rechazar H2 (MTTR) no demuestra equivalencia: el diseño solo")
+    print("  detecta de forma fiable efectos grandes.")

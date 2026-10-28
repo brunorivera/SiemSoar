@@ -1,6 +1,6 @@
 # Artefacto del experimento (campañas E1–E3)
 
-Este directorio contiene la implementación que se **midió** y los registros crudos de la campaña del 16/10/2026. No es la implementación de referencia por etapas que está en `Logic/` (raíz del repositorio): es la versión serializada que corrió en el laboratorio y con la que se calcularon las Tablas 9 y 10 del informe.
+Este directorio contiene la implementación que se **midió** y los registros crudos de las campañas: E1 original del 16/10/2026, repetición de E1 del 26/10/2026, y E2/E3 del 16/10/2026. No es la implementación de referencia por etapas que está en `Logic/` (raíz del repositorio): es la versión serializada que corrió en el laboratorio y con la que se calcularon las Tablas 9 y 10 del informe v5.
 
 ## Composición del flujo medido
 
@@ -55,7 +55,9 @@ docker exec -i lab-postgres psql -U admin -d security_monitoring < lab/scripts/s
 python lab/build_workflow.py          # regenera pipeline-wf.json
 # importar lab/pipeline-wf.json en n8n (o crearlo con la API)
 python lab/controller.py --arm n8n --scenario e1 --n 10 --spacing 300 --spacing-jitter 60 --seed 12345
-python analysis/t2_metrics.py         # U, p exacta, Hodges-Lehmann, A12 y métricas de reporte
+python analysis/report_tables.py      # Tablas 9 y 10 + U, p exacta, Hodges-Lehmann y A12
+python analysis/t2_metrics_v4.py      # re-verificación de U, p, HL, A12 y métricas de reporte
+python analysis/power_analysis.py     # efecto observado y curva de potencia para n = 10
 ```
 
 `controller.py` reinicia el estado entre episodios (iptables, `alerts`, `attack_patterns`, offset de lectura) y espera el espaciado indicado. Para el brazo de control: `--arm f2b --scenario e1` con Fail2ban activo (`scripts/start_f2b.sh`).
@@ -64,16 +66,17 @@ python analysis/t2_metrics.py         # U, p exacta, Hodges-Lehmann, A12 y métr
 
 | Tabla / cifra | Script |
 |---|---|
-| Tabla 9 (media, mediana, cuartiles, mín, máx) | `lab/analyze.py`, `analysis/t2_metrics.py` |
-| Tabla 10 (VP, FN, FP, VN, precisión, FPR) | `lab/benign_check.py`, `analysis/t2_metrics.py` |
-| U, p exacta, Hodges–Lehmann, A12 con IC 95 % | `analysis/t2_metrics.py` |
-| Análisis de potencia (A12 ≥ 0,9 → potencia ≥ 0,85) | `analysis/power_analysis.py` |
+| Tabla 9 (media, mediana, cuartiles, mín, máx) | `analysis/report_tables.py` (`lab/analyze.py` queda como verificación legacy) |
+| Tabla 10 (VP, FN, FP, VN, precisión, FPR) | `lab/benign_check.py` (datos) y `analysis/report_tables.py` (cálculo) |
+| U, p exacta, Hodges–Lehmann, A12 con IC 95 % | `analysis/t2_metrics_v4.py` (fuerza E1 v2) |
+| Análisis de potencia (A12 = 0,88 → 0,82; A12 = 1,0 → 0,97) | `analysis/power_analysis.py` |
 | Verificación R7/R9 (11 comprobaciones) | `lab/verify_r7_r9.js` → `lab/results/r7_r9_verification.json` |
 
 ## Registros
 
-- `results/n8n_e1.jsonl`, `results/n8n_e2.jsonl`, `results/n8n_e3.jsonl`, `results/f2b_e1.jsonl`: un registro por episodio con `t0`, `t_k`, `t_det`, `t_cont`, `MTTD`, `MTTR`, `detected`, `contained`. Corresponden a la campaña del 16/10/2026.
-- `results/n8n_e1_v2.jsonl`, `results/f2b_e1_v2.jsonl`: repetición de E1 del 26/10/2026 sobre el flujo publicado; son la fuente de los valores de E1 del informe. El número de episodio vuelve a empezar en cada bloque de cinco.
+- `results/n8n_e1.jsonl`, `results/f2b_e1.jsonl`: campaña original de E1 del 16/10/2026. Se conservan como antecedente; **no** son la fuente de las cifras del informe v5.
+- `results/n8n_e2.jsonl`, `results/n8n_e3.jsonl`: campañas E2/E3 del 16/10/2026. Un registro por episodio con `t0`, `t_k`, `t_det`, `t_cont`, `MTTD`, `MTTR`, `detected`, `contained`.
+- `results/n8n_e1_v2.jsonl`, `results/f2b_e1_v2.jsonl`: repetición de E1 del 26/10/2026 sobre el flujo publicado; son la fuente de los valores de E1 del informe v5. El número de episodio vuelve a empezar en cada bloque de cinco; los scripts de análisis usan la columna `episode` para ordenar y por eso deben ejecutarse sobre estos archivos (los scripts fuerzan `*_e1_v2.jsonl`).
 - `results/manifest_e1_e3.json`, `results/manifest_e1_v2.json`: commit, hashes SHA-256, semilla, orden y ventana de cada campaña.
 - `results/workflow_export_e1_v2.json`: exportación del flujo que ejecutó la repetición; su nodo Code coincide byte por byte con `pipeline.js` del commit medido.
 - `results/report_e2_e3.md`, `results/benign_e2_e3_summary.json`: resumen de E2/E3 y del tráfico benigno.

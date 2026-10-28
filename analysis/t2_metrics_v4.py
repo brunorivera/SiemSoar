@@ -24,18 +24,18 @@ RES = Path(__file__).resolve().parents[1] / "lab" / "results"
 def load(name):
     out = []
     p = RES / name
-    if not p.exists():
-        alt = RES / (name.replace('.jsonl','_e1_v2.jsonl'))
+    if name.endswith('_e1.jsonl'):
+        alt = RES / name.replace('_e1.jsonl', '_e1_v2.jsonl')
         if alt.exists():
             p = alt
             print(f'[HISTORICO] Usando {alt.name} para {name}', file=sys.stderr)
-        else:
-            raise FileNotFoundError(p)
+    if not p.exists():
+        raise FileNotFoundError(p)
     for line in p.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line:
             out.append(json.loads(line))
-    out.sort(key=lambda r: r["episode"])
+    out.sort(key=lambda r: r.get('episode', 0))
     return out
 
 
@@ -128,9 +128,9 @@ def main():
     print("=" * 72)
     print("T-2a) COMPARACIÓN E1 (n8n vs f2b) — U, p, Hodges-Lehmann+IC95%, A12")
     print("=" * 72)
-    for name, fn in (("MTTD", mttd), ("MTTR", mttr)):
-        a = [fn(r) for r in e1n]
-        b = [fn(r) for r in e1f]
+    for name, fn, flag in (("MTTD", mttd, "detected"), ("MTTR", mttr, "contained")):
+        a = [fn(r) for r in e1n if r.get(flag)]
+        b = [fn(r) for r in e1f if r.get(flag)]
         U, p = mannwhitney_exact(a, b)
         hl = hodges_lehmann(a, b)
         hlo, hhi = hl_bootstrap_ci(a, b)
@@ -152,7 +152,7 @@ def main():
         1 for r in mal
         if r.get("t_k") is not None and r.get("t_det") is not None and r.get("t_cont") is not None
     )
-    print(f"\nCobertura de parseo         = {det}/{total_mal} = {det/total_mal:.3f}")
+    print(f"\nCobertura de parseo (episodios con alerta) = {det}/{total_mal} = {det/total_mal:.3f}")
     print(f"Completitud de bitácora     = {complete}/{total_mal} = {complete/total_mal:.3f}")
     print(f"Alertas con enriquecimiento = 0/{total_mal} = 0.000  (AbuseIPDB R7 fuera de alcance)")
     print(f"Bloqueos automáticos        = {cont}/{total_mal} = {cont/total_mal:.3f}")
