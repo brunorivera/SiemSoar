@@ -15,6 +15,9 @@
 
 BEGIN;
 
+\echo 'R1 | entorno de ejecucion'
+SELECT now() AS executed_at, version() AS postgres_version;
+
 CREATE TEMP TABLE r1_synth (
   case_id  text,
   src_ip   inet,
@@ -42,8 +45,8 @@ CROSS JOIN LATERAL (SELECT now() - make_interval(secs => v.age) AS t) AS x;
 
 \echo 'R1 | eventos sinteticos por caso (event_ts = ingest_ts)'
 SELECT case_id, count(*) AS events,
-       min(now() - event_ts) AS age_max,
-       max(now() - event_ts) AS age_min
+       min(now() - event_ts) AS age_min,
+       max(now() - event_ts) AS age_max
 FROM r1_synth
 GROUP BY case_id
 ORDER BY case_id;

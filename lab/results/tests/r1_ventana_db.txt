@@ -1,17 +1,16 @@
-﻿# R1 - ventana deslizante y horizonte de ingesta
-# Prueba posterior a la campana, no medida.
-# Ejecutada: 2026-11-05 15:00:35 -03:00
-# Comando: docker exec -i lab-postgres psql -U admin -d security_monitoring -v ON_ERROR_STOP=1 < lab/post_campana/test_r1_ventana.sql
-# Entorno: contenedor lab-postgres (PostgreSQL 15.19), base security_monitoring.
-# Resultado: A alerta con GRACE 180 y 600; B no alerta con ninguno; C no alerta con 180 y si con 600.
-
 BEGIN
+R1 | entorno de ejecucion
+          executed_at          |                                     postgres_version                                     
+-------------------------------+------------------------------------------------------------------------------------------
+ 2026-11-06 00:13:28.003946+00 | PostgreSQL 15.19 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
 CREATE TABLE
 INSERT 0 5
 INSERT 0 5
 INSERT 0 5
 R1 | eventos sinteticos por caso (event_ts = ingest_ts)
- case_id | events | age_max  | age_min  
+ case_id | events | age_min  | age_max  
 ---------+--------+----------+----------
  A       |      5 | 00:00:00 | 00:00:20
  B       |      5 | 00:00:00 | 00:06:40
@@ -30,4 +29,3 @@ R1 | correlacion con la consulta del pipeline, GRACE 180 vs 600
 (6 rows)
 
 ROLLBACK
-
