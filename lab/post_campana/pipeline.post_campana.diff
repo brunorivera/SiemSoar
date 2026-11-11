@@ -1,0 +1,26 @@
+diff --git a/lab/pipeline.js b/lab/pipeline.js
+index 080f28e..13abbad 100644
+--- a/lab/pipeline.js
++++ b/lab/pipeline.js
+@@ -15,7 +15,7 @@ const PG = { host: 'lab-postgres', port: 5432, user: 'admin', password: 'admin',
+ 
+ const IPV4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+ const EXCLUDE = new Set(['10.50.0.1', '127.0.0.1']); // R5: gateway/admin
+-const GRACE = 180; // s: horizonte de ingesta que tolera el sondeo por lotes (evita re-alertar)
++const GRACE = 600; // s: horizonte de ingesta que tolera el sondeo por lotes (evita re-alertar)
+ 
+ const pool = new pg.Pool(PG);
+ const out = {};
+@@ -173,10 +173,10 @@ async function main() {
+     for (const h of hits) {
+       const ip = h.ip;
+       if (EXCLUDE.has(ip)) continue; // R5
+-      // dedup: no re-alertar la misma IP dentro de la ventana+horizonte
++      // dedup: no re-alertar la misma IP dentro de la ventana + 60 s
+       const dup = (await pool.query(
+         `SELECT 1 FROM alerts WHERE source_ip=$1 AND category=$2 AND timestamp > now() - ($3 || ' seconds')::interval LIMIT 1`,
+-        [ip, rule.name, win + GRACE + 60])).rows.length > 0;
++        [ip, rule.name, win + 60])).rows.length > 0;
+       if (dup) continue;
+ 
+       const desc = `${rule.name}: ${h.c} eventos en ${win}s desde ${ip}`;

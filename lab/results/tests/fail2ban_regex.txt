@@ -1,0 +1,4 @@
+﻿[PASS] Fail2ban E3 failregex detecta ataque SQLi correctamente
+[PASS] Fail2ban E3 failregex ignora peticion benigna
+[PASS] Fail2ban E2 failregex detecta evento del sensor correctamente
+[ALL TESTS PASSED] Filtros de Fail2ban para E2 y E3 verificados sintacticamente.

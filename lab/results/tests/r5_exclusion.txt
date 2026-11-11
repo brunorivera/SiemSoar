@@ -1,0 +1,17 @@
+== A. Bloqueo de la IP excluida 10.50.0.1
+10.50.0.1 200 {"ok": true, "action": "block", "ip": "10.50.0.1", "ttl": 120}
+-A LABBLOCK -s 10.50.0.1/32 -j DROP
+  REGLA PRESENTE
+
+== B. Diez bloqueos seguidos: no hay tope por tiempo en el agente
+10.50.0.31 200 {"ok": true, "action": "block", "ip": "10.50.0.31", "ttl": 120}
+10.50.0.32 200 {"ok": true, "action": "block", "ip": "10.50.0.32", "ttl": 120}
+10.50.0.33 200 {"ok": true, "action": "block", "ip": "10.50.0.33", "ttl": 120}
+10.50.0.34 200 {"ok": true, "action": "block", "ip": "10.50.0.34", "ttl": 120}
+10.50.0.35 200 {"ok": true, "action": "block", "ip": "10.50.0.35", "ttl": 120}
+10.50.0.36 200 {"ok": true, "action": "block", "ip": "10.50.0.36", "ttl": 120}
+10.50.0.37 200 {"ok": true, "action": "block", "ip": "10.50.0.37", "ttl": 120}
+10.50.0.38 200 {"ok": true, "action": "block", "ip": "10.50.0.38", "ttl": 120}
+10.50.0.39 200 {"ok": true, "action": "block", "ip": "10.50.0.39", "ttl": 120}
+10.50.0.40 200 {"ok": true, "action": "block", "ip": "10.50.0.40", "ttl": 120}
+13

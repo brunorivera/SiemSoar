@@ -1,0 +1,20 @@
+== Verificacion de R7 y R9 con respuestas simuladas
+== Verificación R7 (cuota / HTTP 429 / caché / estado) ==
+  [PASS] R7.1 — HTTP 429 → el flujo continúa y registra estado degraded_quota  :: status=degraded_quota
+  [PASS] R7.2 — Retry-After se lee y registra (60 s)  :: retry_after_s=60
+  [PASS] R7.3 — Cuota agotada → no reintenta dentro de Retry-After (sin nueva llamada)  :: calls=1
+  [PASS] R7.4 — HTTP 200 → puntaje y país registrados  :: status=ok score=92 country=RU
+  [PASS] R7.5 — Segunda consulta de la misma IP → servida desde caché  :: status=cached hits=1
+
+== Verificación R9 (bifurcación por puntaje) ==
+  [PASS] R9.1 — Puntaje 92 (>=75) → bloqueo automático  :: abuseConfidenceScore 92 >= 75
+  [PASS] R9.2 — Puntaje 60 (50-74) → revisión humana  :: abuseConfidenceScore 60 en el rango 50-74
+  [PASS] R9.3 — Puntaje 20 (<50) → sin bloqueo automático  :: abuseConfidenceScore 20 < 50
+  [PASS] R9.4 — Sin puntaje (cuota agotada) → sin bloqueo automático  :: enriquecimiento no disponible (sin puntaje) → sin bloqueo automático
+  [PASS] R9.5 — Borde: puntaje 75 → bloqueo automático  :: abuseConfidenceScore 75 >= 75
+
+== Comprobación de red en vivo (salida a internet) ==
+  [PASS] NET.1 — api.abuseipdb.com alcanzable; degradación controlada sin clave  :: status=error_401
+
+RESUMEN: 11/11 comprobaciones aprobadas
+Escrito: /tmp/vr7/results/r7_r9_verification.json

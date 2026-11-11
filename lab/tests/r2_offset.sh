@@ -26,9 +26,9 @@ printf 'alerts_antes=%s\nalerts_despues=%s\nruns_antes=%s\nruns_despues=%s\n' \
   "$A0" "$A1" "$R0" "$R1" | tee "$OUT/r2_offset.txt"
 
 if [ "$A1" -eq "$A0" ] && [ "$R1" -gt "$R0" ]; then
-  echo "RESULTADO: PASA (el flujo corrio y no reproceso eventos: offset efectivo)"
+  echo "RESULTADO: PASA (el flujo corrio y no reproceso eventos: offset efectivo)" | tee -a "$OUT/r2_offset.txt"
 elif [ "$A1" -gt "$A0" ]; then
-  echo "RESULTADO: FALLA (se generaron alertas sin eventos nuevos: posible reproceso)"
+  echo "RESULTADO: FALLA (se generaron alertas sin eventos nuevos: posible reproceso)" | tee -a "$OUT/r2_offset.txt"
 else
-  echo "RESULTADO: NO CONCLUYENTE (el flujo no registro corridas nuevas)"
+  echo "RESULTADO: NO CONCLUYENTE (el flujo no registro corridas nuevas)" | tee -a "$OUT/r2_offset.txt"
 fi

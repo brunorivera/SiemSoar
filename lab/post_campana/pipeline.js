@@ -173,10 +173,10 @@ async function main() {
     for (const h of hits) {
       const ip = h.ip;
       if (EXCLUDE.has(ip)) continue; // R5
-      // dedup: no re-alertar la misma IP dentro de la ventana+horizonte
+      // dedup: no re-alertar la misma IP dentro de la ventana + 60 s
       const dup = (await pool.query(
         `SELECT 1 FROM alerts WHERE source_ip=$1 AND category=$2 AND timestamp > now() - ($3 || ' seconds')::interval LIMIT 1`,
-        [ip, rule.name, win + GRACE + 60])).rows.length > 0;
+        [ip, rule.name, win + 60])).rows.length > 0;
       if (dup) continue;
 
       const desc = `${rule.name}: ${h.c} eventos en ${win}s desde ${ip}`;

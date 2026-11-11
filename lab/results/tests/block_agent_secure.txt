@@ -1,0 +1,9 @@
+﻿[PASS] /health responde 200 sin autenticacion
+[PASS] /block sin token responde 401 Unauthorized
+[PASS] /block con token incorrecto responde 401 Unauthorized
+[PASS] /block con IP invalida o inyeccion responde 400 Bad Request
+2026-11-11T17:39:19.040Z BLOCK 10.50.0.201 ttl=60
+[PASS] /block con token valido y IPv4 valida responde 200 OK
+2026-11-11T17:39:19.045Z SKIP_EXCLUDED 10.50.0.1
+[PASS] /block sobre IP excluida 10.50.0.1 responde skipped=excluded
+[ALL TESTS PASSED] Agente de bloqueo seguro verificado exitosamente.

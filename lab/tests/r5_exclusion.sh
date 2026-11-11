@@ -12,7 +12,7 @@ mkdir -p "$OUT"
 LOG="$OUT/r5_exclusion.txt"
 
 post() {
-  docker exec "$ATTACKER" python3 - "$VICTIM" "$1" <<'PY'
+  docker exec -i "$ATTACKER" python3 - "$VICTIM" "$1" <<'PY'
 import sys, urllib.request
 host, ip = sys.argv[1], sys.argv[2]
 url = "http://%s:9000/block?ip=%s&ttl=120" % (host, ip)
@@ -37,13 +37,13 @@ PY
 } | tee "$LOG"
 
 if docker exec "$VICTIM" iptables -S | grep -q "10.50.0.1"; then
-  echo "RESULTADO: FALLA (se bloqueo una IP excluida)"
+  echo "RESULTADO: FALLA (se bloqueo una IP excluida)" | tee -a "$LOG"
 else
-  echo "RESULTADO: PASA en A (la IP excluida no se bloqueo); B evidencia la ausencia de tope"
+  echo "RESULTADO: PASA en A (la IP excluida no se bloqueo); B evidencia la ausencia de tope" | tee -a "$LOG"
 fi
 
 for i in $(seq 1 10); do
-  docker exec "$ATTACKER" python3 - "$VICTIM" "10.50.0.$((30+i))" <<'PY' >/dev/null 2>&1 || true
+  docker exec -i "$ATTACKER" python3 - "$VICTIM" "10.50.0.$((30+i))" <<'PY' >/dev/null 2>&1 || true
 import sys, urllib.request
 host, ip = sys.argv[1], sys.argv[2]
 try:

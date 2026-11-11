@@ -1,0 +1,19 @@
+== 1. Variables de entorno del contenedor n8n
+N8N_RUNNERS_TASK_TIMEOUT=120
+NODE_FUNCTION_ALLOW_EXTERNAL=pg,fs,readline,child_process,util
+NODE_FUNCTION_ALLOW_BUILTIN=fs,readline,child_process,util,http,https,os,path,crypto,net
+N8N_RUNNERS_GRANT_TOKEN_TTL=300
+N8N_RESTRICT_FILE_ACCESS_TO=/home/node/.n8n-files;/logs
+
+== 2. Uso de require() en el codigo medido
+6:const fs = require('fs');
+7:const pg = require('pg');
+8:const http = require('http');
+
+== 3. Nodos del flujo medido
+"type": "main"
+"type": "n8n-nodes-base.code"
+"type": "n8n-nodes-base.manualTrigger"
+"type": "n8n-nodes-base.scheduleTrigger"
+"type": "n8n-nodes-base.webhook"
+RESULTADO: FALLA

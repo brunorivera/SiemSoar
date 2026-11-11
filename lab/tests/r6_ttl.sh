@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R6 — TTL, tope de reglas y desbloqueo. NO EJECUTADA.
+# R6 â€” TTL, tope de reglas y desbloqueo. NO EJECUTADA.
 #
 # A: una regla de bloqueo desaparece sola despues del TTL (600 s por defecto).
 # B: /unblock retira la regla antes del TTL.
@@ -16,7 +16,7 @@ IP_C=10.50.0.252
 TTL=600
 
 call() {
-  docker exec "$ATTACKER" python3 - "$VICTIM" "$1" "$2" <<'PY' || true
+  docker exec -i "$ATTACKER" python3 - "$VICTIM" "$1" "$2" <<'PY' || true
 import sys, urllib.request
 host, endpoint, ip = sys.argv[1], sys.argv[2], sys.argv[3]
 url = "http://%s:9000/%s?ip=%s&ttl=600" % (host, endpoint, ip)

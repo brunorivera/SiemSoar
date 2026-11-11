@@ -1,0 +1,29 @@
+# Override NO MEDIDO: fija las imágenes por digest y exige secretos por entorno.
+#
+# Uso, solo para una campaña nueva:
+#   cp lab/.env.example lab/.env
+#   # editar lab/.env con valores nuevos
+#   docker compose --env-file lab/.env \
+#     -f lab/docker-compose.yml -f lab/docker-compose.pinned.yml up -d
+#
+# El archivo lab/docker-compose.yml sigue siendo el que se usó en la campaña
+# publicada; no se modifica para no invalidar lab/results/manifest_*.json.
+services:
+  lab-postgres:
+    image: postgres@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en lab/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-security_monitoring}
+
+  lab-n8n:
+    image: docker.n8n.io/n8nio/n8n@sha256:dd580fe1ab6e99e85bc66f2acf8bc8c5e9409fbe61b2e2803c5024403ef52833
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?defina N8N_ENCRYPTION_KEY en lab/.env}
+      PG_USER: ${POSTGRES_USER:-admin}
+      PG_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en lab/.env}
+      BLOCK_AGENT_TOKEN: ${BLOCK_AGENT_TOKEN:?defina BLOCK_AGENT_TOKEN en lab/.env}
+
+  victim:
+    environment:
+      BLOCK_AGENT_TOKEN: ${BLOCK_AGENT_TOKEN:?defina BLOCK_AGENT_TOKEN en lab/.env}

@@ -1,0 +1,38 @@
+N-14 — Unidades benignas con el patron de inyeccion SQL (E3)
+Fecha de ejecucion: 2026-11-11, 17:18-17:43 UTC
+Entorno: lab-n8n (flujo activo), lab-victim (Apache), lab-attacker, lab-postgres.
+Datos por unidad: lab/results/benign_e3_sqli.jsonl (lote A) y
+lab/results/benign_e3_sqli_n8n.jsonl (lote B).
+
+Comando base:
+  docker cp lab/benign_e1.py lab-attacker:/opt/benign_e1.py
+  docker exec lab-attacker python3 /opt/benign_e1.py --scenario E3 --arm n8n \
+      --n 10 --ip-base <IP_BASE> --out /logs/<ARCHIVO>.jsonl
+
+Trafico generado (20 unidades, todas HTTP 200 y registradas en all.log):
+  GET /?q=union+select+articulos&page=1 HTTP/1.1
+  User-Agent: benign-e1/1.0
+
+Lote A (flujo activo con arm='f2b', IPs 10.50.0.230-239):
+  Corridas: 17:18:43 lines=4 alerts=3; 17:19:38 lines=7 alerts=7.
+  10 alertas SQL Injection Pattern (ids 2-11), una por IP.
+  Sin bloqueo: la respuesta activa esta condicionada a arm==='n8n'.
+  Resultado: VP=10, FN=0, FP=10, VN=0; precision=0,50; FPR=1,00.
+
+Lote B (arm='n8n' fijado en lab_config, IPs 10.50.0.240-249):
+  Corridas: 17:41:52 lines=14 alerts=1; 17:42:42 lines=8 alerts=8;
+  17:43:00 lines=1 alerts=1.
+  10 alertas SQL Injection Pattern (ids 12-21), una por IP.
+  10 bloqueos efectivos: iptables LABBLOCK con 10 reglas y blocks.log con
+  10 lineas BLOCK ttl=600 (10.50.0.240 a 10.50.0.249).
+  Resultado: VP=10, FN=0, FP=10, VN=0; precision=0,50; FPR=1,00.
+  Al final se ejecuto /reset y se restauro lab_config.arm='f2b'.
+
+Conclusion:
+  La regla 5 (union.*select|drop.*table) no distingue una busqueda legitima de
+  una inyeccion: 10/10 unidades benignas con el patron generaron alerta y, con
+  el brazo n8n, 10/10 fueron bloqueadas. El FPR=0.000 de la campana E3 solo
+  cubre unidades benignas SIN el patron. Se agrega la estrata "benigno con
+  patron" a la Tabla 10 y se explicita la limitacion en el texto.
+  Estas alertas son posteriores a la campana y no forman parte del conjunto de
+  datos de lab/results/*.jsonl que consume analysis/report_tables.py.

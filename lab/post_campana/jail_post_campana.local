@@ -1,0 +1,36 @@
+# lab/post_campana/jail_post_campana.local
+# Configuracion propuesta de jails de Fail2ban para comparar en E2 y E3 (post-campana, no medida).
+[DEFAULT]
+backend = polling
+polltime = 1
+bantime = 300
+findtime = 300
+maxretry = 5
+
+[sshd]
+enabled = true
+filter = alpine-sshd
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 5
+findtime = 300
+bantime = 300
+action = iptables[name=SSH, port=ssh, protocol=tcp, blocktype=DROP]
+
+[apache-sqli]
+enabled = true
+filter = filter_apache_sqli
+logpath = /var/log/apache2/access.log
+maxretry = 1
+findtime = 1
+bantime = 300
+action = iptables[name=HTTP, port=http, protocol=tcp, blocktype=DROP]
+
+[portscan-sensor]
+enabled = true
+filter = filter_portscan_sensor
+logpath = /var/log/security/alerts.log
+maxretry = 20
+findtime = 60
+bantime = 300
+action = iptables[name=PORTSCAN, port=all, protocol=all, blocktype=DROP]

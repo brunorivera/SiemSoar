@@ -1,0 +1,15 @@
+R6 — TTL, tope de reglas y desbloqueo
+Estado: NO EJECUTADA.
+Motivo: el script lab/tests/r6_ttl.sh espera 630 s para observar la expiracion
+del TTL de 600 s. El limite de ejecucion de esta sesion es de 5 minutos por
+comando, por lo que la prueba no puede completarse sin fragmentarla.
+
+Lo que si se verifico por lectura del codigo medido:
+  - lab/victim/block_agent.py: do_block guarda expiry = time.time() + ttl;
+    reap_expired() recorre _blocked cada 1 s y llama a do_unblock() al vencer.
+  - No hay tope de cantidad de reglas: do_block agrega una regla por IP.
+  - do_reset() y el reinicio del contenedor borran _blocked y vacian LABBLOCK.
+  - La prueba R5 (lab/results/tests/r5_exclusion.txt, 11/11/2026) aplico 10
+    bloqueos seguidos sin tope, lo que confirma la ausencia de limite.
+
+No se usa como evidencia de una ejecucion de R6; se cita como limitacion.

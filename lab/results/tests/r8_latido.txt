@@ -1,0 +1,5 @@
+runs=432
+ultimo_run_ts=2026-11-1117:33:38.707374+00
+alertas_latido=0
+RESULTADO: FALLA (no existe alerta de latido: un fallo silencioso sigue siendo indistinguible)
+  Coincide con lo declarado en la Tabla 11 (R8 parcial) y en la seccion 7.2.

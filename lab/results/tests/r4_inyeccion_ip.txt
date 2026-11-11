@@ -1,0 +1,8 @@
+== A. Pedido directo al agente con IP invalida
+status 200 {"ok": true, "action": "block", "ip": "10.50.0.99;id", "ttl": 60}
+
+== B. Insercion de una alerta con IP no canonica en parsed_events
+  insertado; el proximo ciclo no debe disparar ningun comando
+== C. Reglas con 10.50.0.99 despues
+  (ninguna)
+RESULTADO: PASA (no se aplico ninguna regla con una IP no canonica)
