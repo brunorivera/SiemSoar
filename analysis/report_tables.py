@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python3
-"""Regenera las cifras cuantitativas de las Tablas 9 y 10 del informe v5.
+#!/usr/bin/env python3
+"""Regenera las cifras cuantitativas de las Tablas 9 y 10 del informe v11.
 
 Fuentes:
   - lab/results/n8n_e1_v2.jsonl y f2b_e1_v2.jsonl (repetición E1, 26/10/2026)

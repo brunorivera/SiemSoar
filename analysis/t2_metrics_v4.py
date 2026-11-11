@@ -1,4 +1,7 @@
-"""T-2: métricas adicionales del informe (párr. 232 y nota Tabla 9).
+"""T-2 (vigente): métricas adicionales del informe (párr. 232 y nota Tabla 9).
+
+Versión vigente; reemplaza a `analysis/t2_metrics.py` (legado) y reproduce
+los valores publicados en la v11.
 
 Calcula para cada comparación (E1 n8n vs f2b):
   - U (Mann-Whitney, convención brazo n8n) y p exacta (re-verificación)
