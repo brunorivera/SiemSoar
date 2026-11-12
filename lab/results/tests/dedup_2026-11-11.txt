@@ -1,0 +1,36 @@
+Timing is off.
+        fecha_ejecucion        |                                          motor                                           
+-------------------------------+------------------------------------------------------------------------------------------
+ 2026-11-12 01:10:58.474316+00 | PostgreSQL 15.19 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+CREATE TABLE
+INSERT 0 5
+  rule   | win | margen_anterior | margen_nuevo | cubre_ttl 
+---------+-----+-----------------+--------------+-----------
+ regla 2 | 600 |            1260 |          660 | t
+ regla 1 | 300 |             960 |          600 | f
+ regla 3 |  60 |             720 |          600 | f
+ regla 4 |   1 |             661 |          600 | f
+ regla 5 |   1 |             661 |          600 | f
+(5 rows)
+
+INSERT 0 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 590 s | t                  | t
+(1 row)
+
+UPDATE 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 610 s | f                  | t
+(1 row)
+
+UPDATE 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 650 s | f                  | t
+(1 row)
+
+DELETE 1

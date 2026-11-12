@@ -15,7 +15,7 @@ const PG = { host: 'lab-postgres', port: 5432, user: 'admin', password: 'admin',
 
 const IPV4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
 const EXCLUDE = new Set(['10.50.0.1', '127.0.0.1']); // R5: gateway/admin
-const GRACE = 600; // s: horizonte de ingesta que tolera el sondeo por lotes (evita re-alertar)
+const GRACE = 600; // s: horizonte de ingesta (ingest_ts > now() - GRACE); no es margen de deduplicacion
 
 const pool = new pg.Pool(PG);
 const out = {};
@@ -173,10 +173,12 @@ async function main() {
     for (const h of hits) {
       const ip = h.ip;
       if (EXCLUDE.has(ip)) continue; // R5
-      // dedup: no re-alertar la misma IP dentro de la ventana + 60 s
+      // dedup: el margen debe cubrir la ventana de la regla y el horizonte de ingesta,
+      // de modo que no se suprima una reincidencia posterior al TTL de bloqueo (600 s).
+      const dedupWindow = Math.max(win + 60, GRACE);
       const dup = (await pool.query(
         `SELECT 1 FROM alerts WHERE source_ip=$1 AND category=$2 AND timestamp > now() - ($3 || ' seconds')::interval LIMIT 1`,
-        [ip, rule.name, win + 60])).rows.length > 0;
+        [ip, rule.name, dedupWindow])).rows.length > 0;
       if (dup) continue;
 
       const desc = `${rule.name}: ${h.c} eventos en ${win}s desde ${ip}`;

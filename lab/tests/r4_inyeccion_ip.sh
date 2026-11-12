@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R4 â€” Validacion de la direccion antes de cualquier comando. NO EJECUTADA.
+# R4 — Validacion de la direccion antes de cualquier comando. Cada corrida imprime su fecha.
 #
 # Caso A: el pipeline debe descartar una IP con metacaracteres.
 # Caso B: el agente de bloqueo no debe ejecutar nada con una IP invalida.
@@ -17,6 +17,7 @@ rules() { docker exec "$VICTIM" iptables -S | grep -c "10.50.0.99" || true; }
 
 echo "R4 | reglas con 10.50.0.99 antes: $(rules)"
 {
+  echo "fecha=$(date -Is)"
   echo "== A. Pedido directo al agente con IP invalida"
   docker exec -i "$ATTACKER" python3 - "$VICTIM" <<'PY'
 import sys, urllib.request

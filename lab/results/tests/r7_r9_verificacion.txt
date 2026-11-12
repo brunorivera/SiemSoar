@@ -1,3 +1,4 @@
+fecha=2026-11-11T22:10:35-03:00
 == Verificacion de R7 y R9 con respuestas simuladas
 == Verificación R7 (cuota / HTTP 429 / caché / estado) ==
   [PASS] R7.1 — HTTP 429 → el flujo continúa y registra estado degraded_quota  :: status=degraded_quota

@@ -1,5 +1,6 @@
-alerts_antes=1
-alerts_despues=1
-runs_antes=418
-runs_despues=420
+fecha=2026-11-11T22:08:30-03:00
+alerts_antes=21
+alerts_despues=21
+runs_antes=478
+runs_despues=480
 RESULTADO: PASA (el flujo corrio y no reproceso eventos: offset efectivo)

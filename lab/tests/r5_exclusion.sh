@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R5 — Lista de exclusion y limite de bloqueos por tiempo. NO EJECUTADA.
+# R5 — Lista de exclusion y limite de bloqueos por tiempo. Cada corrida imprime su fecha.
 #
 # Caso A: una IP excluida (10.50.0.1, puerta de enlace) no debe bloquearse.
 # Caso B: no existe tope de bloqueos por ventana: se documenta el defecto.
@@ -25,6 +25,7 @@ PY
 }
 
 {
+  echo "fecha=$(date -Is)"
   echo "== A. Bloqueo de la IP excluida 10.50.0.1"
   post 10.50.0.1
   sleep 1
@@ -52,3 +53,13 @@ except Exception:
     pass
 PY
 done
+
+# Limpieza: retirar también la regla de la puerta de enlace que deja el caso A.
+docker exec -i "$ATTACKER" python3 - "$VICTIM" <<'PY' >/dev/null 2>&1 || true
+import sys, urllib.request
+host = sys.argv[1]
+try:
+    urllib.request.urlopen("http://%s:9000/reset" % host, timeout=5).read()
+except Exception:
+    pass
+PY

@@ -1,26 +1,39 @@
 # Correcciones posteriores a la campaña
 
 Estos archivos **no** son el artefacto medido y no deben aplicarse al commit
-`58007f5` sin una campaña nueva y un manifiesto nuevo. El artefacto medido se
-conserva en `lab/pipeline.js`, `lab/victim/block_agent.py` y
-`lab/docker-compose.yml`.
+`38d2d3c` (campaña E1–E3) ni al commit `fc99b02` (repetición de E1) sin una
+campaña nueva y un manifiesto nuevo. El artefacto medido se conserva en
+`lab/pipeline.js`, `lab/victim/block_agent.py` y `lab/docker-compose.yml`.
 
-## 1. Horizonte de ingesta y deduplicado (P-05 / U-01)
+## 1. Horizonte de ingesta y deduplicado (P-05 / U-01 / W-02)
 
-`lab/post_campana/pipeline.post_campana.diff` cambia:
+`lab/post_campana/pipeline.post_campana.diff` cambia dos cosas:
 
 - `GRACE = 180` → `GRACE = 600`: cubre la ventana de correlación más larga del
   catálogo (600 s de la regla 2).
-- Deduplicado de alertas: `win + GRACE + 60` → `win + 60`. El margen de
-  deduplicado queda en la ventana de la regla más 60 s, no en la ventana más el
-  horizonte de ingesta.
+- Deduplicado de alertas: `win + GRACE + 60` → `max(win + 60, GRACE)`. El margen
+  queda en la ventana de la regla más 60 s, pero nunca por debajo del horizonte
+  de ingesta. La corrección intermedia `win + 60` dejaba márgenes de 360, 660,
+  120, 61 y 61 s: para las reglas 1, 3, 4 y 5 el margen era menor que el TTL de
+  bloqueo de 600 s, de modo que una dirección que reincidía después de que el
+  agente retiraba el bloqueo seguía suprimida. `max(win + 60, GRACE)` produce
+  márgenes de 600, 660, 600, 600 y 600 s: solo la regla 2 supera el TTL, por
+  60 s, y ninguna queda por debajo.
 
-Con `GRACE = 600` y dedup `win + 60`, los márgenes por regla son 360, 660, 120,
-61 y 61 s. Solo la regla 2 (660 s) supera el TTL de bloqueo de 600 s, por 60 s.
-Con el dedup anterior (`win + GRACE + 60`) los márgenes eran 960, 1260, 720, 661
+Con el dedup original (`win + GRACE + 60`) los márgenes eran 960, 1260, 720, 661
 y 661 s: todos superaban el TTL. El efecto de la deduplicación sobre la ventana
 efectiva no se midió en la campaña; se declara como comportamiento propuesto del
-artefacto, no como resultado experimental.
+artefacto, no como resultado experimental. La prueba a nivel de base de datos
+`lab/post_campana/test_dedup.sql` (salida en `lab/results/tests/dedup_*.txt`)
+verifica los márgenes y el corte en 600 s; tampoco es una medición de campaña.
+
+### Diferencias reales entre las dos copias
+
+`lab/pipeline.js` (artefacto medido) y `lab/post_campana/pipeline.js` difieren
+solo en los dos puntos anteriores: `GRACE` (180 → 600) y la expresión del margen
+de deduplicación (`win + GRACE + 60` → `max(win + 60, GRACE)`), más los
+comentarios asociados. No hay otras diferencias de código. El diff reproducible
+es `lab/post_campana/pipeline.post_campana.diff`.
 
 El parche se aplica sobre `lab/pipeline.js` en una copia limpia; el resultado es
 el que se conserva en `lab/post_campana/pipeline.js`.
@@ -105,5 +118,5 @@ git diff --check
 ```
 
 `python lab/verify_manifest.py` debe seguir en 18/18; `report_tables.py` debe
-producir la misma salida que la versión 10 (lee solo `lab/results/*.jsonl` y
-`benign_e2_e3_summary.json`, no la base viva).
+producir la misma salida que la campaña (Tablas 9 y 10), porque lee solo
+`lab/results/*.jsonl` y `benign_e2_e3_summary.json`, no la base viva.

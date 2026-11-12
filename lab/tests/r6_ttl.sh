@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R6 â€” TTL, tope de reglas y desbloqueo. NO EJECUTADA.
+# R6 — TTL, tope de reglas y desbloqueo. Cada corrida imprime su fecha.
 #
 # A: una regla de bloqueo desaparece sola despues del TTL (600 s por defecto).
 # B: /unblock retira la regla antes del TTL.
@@ -33,6 +33,7 @@ PY
 has_rule() { docker exec "$VICTIM" iptables -S | grep -c "$1" || true; }
 
 {
+  echo "fecha=$(date -Is)"
   echo "== A. TTL"
   call block "$IP_A"
   echo "  regla inmediata: $(has_rule "$IP_A")"

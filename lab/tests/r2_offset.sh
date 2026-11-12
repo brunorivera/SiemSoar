@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # R2 — Offset de lectura por archivo e inodo: dos ciclos sin eventos nuevos no
-# generan alertas nuevas. NO EJECUTADA.
+# generan alertas nuevas. Cada corrida imprime su propia fecha.
 set -uo pipefail
 
 PG="docker exec lab-postgres psql -U admin -d security_monitoring -tAc"
@@ -22,8 +22,8 @@ sleep 130
 A1=$(total); R1=$(runs)
 
 echo "  estado final:   alerts=$A1 pipeline_runs=$R1"
-printf 'alerts_antes=%s\nalerts_despues=%s\nruns_antes=%s\nruns_despues=%s\n' \
-  "$A0" "$A1" "$R0" "$R1" | tee "$OUT/r2_offset.txt"
+printf 'fecha=%s\nalerts_antes=%s\nalerts_despues=%s\nruns_antes=%s\nruns_despues=%s\n' \
+  "$(date -Is)" "$A0" "$A1" "$R0" "$R1" | tee "$OUT/r2_offset.txt"
 
 if [ "$A1" -eq "$A0" ] && [ "$R1" -gt "$R0" ]; then
   echo "RESULTADO: PASA (el flujo corrio y no reproceso eventos: offset efectivo)" | tee -a "$OUT/r2_offset.txt"

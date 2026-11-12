@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # R7 y R9 — Cuota de AbuseIPDB y puntaje como condicion de respuesta.
-# Ya verificado con respuestas simuladas durante la campana: este script lo
-# reproduce y guarda la salida. NO EJECUTADA en esta instancia.
+# Reproduce la verificacion con respuestas simuladas y guarda la salida.
+# Cada corrida imprime su fecha y conserva el JSON en lab/results/tests/.
 set -uo pipefail
 export MSYS_NO_PATHCONV=1   # Git Bash en Windows: no convertir /tmp/... a rutas locales
 
@@ -9,12 +9,17 @@ OUT=lab/results/tests
 mkdir -p "$OUT"
 
 {
+  echo "fecha=$(date -Is)"
   echo "== Verificacion de R7 y R9 con respuestas simuladas"
   docker exec lab-n8n sh -c "rm -rf /tmp/vr7; mkdir -p /tmp/vr7/results"
   docker cp lab/verify_r7_r9.js lab-n8n:/tmp/vr7/verify_r7_r9.js
   docker cp lab/enrichment.js lab-n8n:/tmp/vr7/enrichment.js
   docker exec lab-n8n node /tmp/vr7/verify_r7_r9.js
 } 2>&1 | tee "$OUT/r7_r9_verificacion.txt"
+
+JSON_OUT="$OUT/r7_r9_verification_$(date +%Y-%m-%d).json"
+docker cp lab-n8n:/tmp/vr7/results/r7_r9_verification.json "$JSON_OUT" 2>/dev/null || true
+if [ -f "$JSON_OUT" ]; then echo "JSON: $JSON_OUT"; fi
 
 SIM=$(grep -c '\[PASS\] R[79]\.' "$OUT/r7_r9_verificacion.txt" || true)
 FAILSIM=$(grep -c '\[FAIL\] R[79]\.' "$OUT/r7_r9_verificacion.txt" || true)

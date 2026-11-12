@@ -29,6 +29,8 @@ const EXCLUDE = new Set(['10.50.0.1', '127.0.0.1']); // R5: gateway/admin
 // Correccion del horizonte de ingesta: GRACE debe cubrir la ventana de
 // correlacion mas larga del catalogo (600 s para la regla 2). Con GRACE = 180 s
 // la ventana efectiva de la regla 1 (300 s) quedaba recortada.
+// GRACE es solo el horizonte de ingesta; el margen de deduplicacion se calcula
+// aparte como max(win + 60, GRACE).
 const GRACE = 600;
 
 const pool = new pg.Pool(PG);
@@ -180,9 +182,12 @@ async function main() {
     for (const h of hits) {
       const ip = h.ip;
       if (EXCLUDE.has(ip)) continue; // R5
+      // dedup: margen = max(ventana + 60 s, GRACE), para no suprimir reincidencias
+      // posteriores al TTL de bloqueo de 600 s.
+      const dedupWindow = Math.max(win + 60, GRACE);
       const dup = (await pool.query(
         `SELECT 1 FROM alerts WHERE source_ip=$1 AND category=$2 AND timestamp > now() - ($3 || ' seconds')::interval LIMIT 1`,
-        [ip, rule.name, win + 60])).rows.length > 0;
+        [ip, rule.name, dedupWindow])).rows.length > 0;
       if (dup) continue;
 
       const desc = `${rule.name}: ${h.c} eventos en ${win}s desde ${ip}`;

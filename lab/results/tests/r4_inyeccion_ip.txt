@@ -1,3 +1,4 @@
+fecha=2026-11-11T22:08:33-03:00
 == A. Pedido directo al agente con IP invalida
 status 200 {"ok": true, "action": "block", "ip": "10.50.0.99;id", "ttl": 60}
 

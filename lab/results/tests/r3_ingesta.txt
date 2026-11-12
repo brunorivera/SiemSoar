@@ -1,3 +1,4 @@
+fecha=2026-11-11T22:08:30-03:00
 == 1. Variables de entorno del contenedor n8n
 N8N_RUNNERS_TASK_TIMEOUT=120
 NODE_FUNCTION_ALLOW_EXTERNAL=pg,fs,readline,child_process,util
@@ -5,12 +6,18 @@ NODE_FUNCTION_ALLOW_BUILTIN=fs,readline,child_process,util,http,https,os,path,cr
 N8N_RUNNERS_GRANT_TOKEN_TTL=300
 N8N_RESTRICT_FILE_ACCESS_TO=/home/node/.n8n-files;/logs
 
-== 2. Uso de require() en el codigo medido
+== 2. Configuracion que habilita la lectura en lab/docker-compose.yml
+25:      - NODE_FUNCTION_ALLOW_EXTERNAL=pg,fs,readline,child_process,util
+26:      - NODE_FUNCTION_ALLOW_BUILTIN=fs,readline,child_process,util,http,https,os,path,crypto,net
+27:      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/.n8n-files;/logs
+28:      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
+== 3. Uso de require() en el codigo medido
 6:const fs = require('fs');
 7:const pg = require('pg');
 8:const http = require('http');
 
-== 3. Nodos del flujo medido
+== 4. Nodos del flujo medido
 "type": "main"
 "type": "n8n-nodes-base.code"
 "type": "n8n-nodes-base.manualTrigger"

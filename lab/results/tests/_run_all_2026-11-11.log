@@ -1,0 +1,173 @@
+=== INICIO 2026-11-11T22:05:01-03:00 ===
+--- R2 2026-11-11T22:05:02-03:00 ---
+R2 | esperando que se estabilice un ciclo
+  estado inicial: alerts=21 pipeline_runs=478 file_offsets=3
+R2 | dos ciclos sin trafico nuevo (130 s)
+  estado final:   alerts=21 pipeline_runs=480
+fecha=2026-11-11T22:08:30-03:00
+alerts_antes=21
+alerts_despues=21
+runs_antes=478
+runs_despues=480
+RESULTADO: PASA (el flujo corrio y no reproceso eventos: offset efectivo)
+--- R3 2026-11-11T22:08:30-03:00 ---
+fecha=2026-11-11T22:08:30-03:00
+== 1. Variables de entorno del contenedor n8n
+N8N_RUNNERS_TASK_TIMEOUT=120
+NODE_FUNCTION_ALLOW_EXTERNAL=pg,fs,readline,child_process,util
+NODE_FUNCTION_ALLOW_BUILTIN=fs,readline,child_process,util,http,https,os,path,crypto,net
+N8N_RUNNERS_GRANT_TOKEN_TTL=300
+N8N_RESTRICT_FILE_ACCESS_TO=/home/node/.n8n-files;/logs
+
+== 2. Configuracion que habilita la lectura en lab/docker-compose.yml
+25:      - NODE_FUNCTION_ALLOW_EXTERNAL=pg,fs,readline,child_process,util
+26:      - NODE_FUNCTION_ALLOW_BUILTIN=fs,readline,child_process,util,http,https,os,path,crypto,net
+27:      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/.n8n-files;/logs
+28:      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
+== 3. Uso de require() en el codigo medido
+6:const fs = require('fs');
+7:const pg = require('pg');
+8:const http = require('http');
+
+== 4. Nodos del flujo medido
+"type": "main"
+"type": "n8n-nodes-base.code"
+"type": "n8n-nodes-base.manualTrigger"
+"type": "n8n-nodes-base.scheduleTrigger"
+"type": "n8n-nodes-base.webhook"
+RESULTADO: FALLA (R3 no se cumple: lectura con fs dentro del nodo Code)
+  La instalacion limpia sin NODE_FUNCTION_ALLOW_BUILTIN falla en el primer ciclo;
+  para reproducirlo, retirar la variable del compose y reiniciar lab-n8n.
+--- R4 2026-11-11T22:08:32-03:00 ---
+R4 | reglas con 10.50.0.99 antes: 0
+fecha=2026-11-11T22:08:33-03:00
+== A. Pedido directo al agente con IP invalida
+status 200 {"ok": true, "action": "block", "ip": "10.50.0.99;id", "ttl": 60}
+
+== B. Insercion de una alerta con IP no canonica en parsed_events
+ERROR:  invalid input syntax for type inet: "10.50.0.99;id"
+LINE 2:        VALUES (now(), 'SSH Brute Force', '10.50.0.99;id', 't...
+                                                 ^
+  insertado; el proximo ciclo no debe disparar ningun comando
+== C. Reglas con 10.50.0.99 despues
+  (ninguna)
+RESULTADO: PASA (no se aplico ninguna regla con una IP no canonica)
+--- R5 2026-11-11T22:10:03-03:00 ---
+fecha=2026-11-11T22:10:03-03:00
+== A. Bloqueo de la IP excluida 10.50.0.1
+10.50.0.1 200 {"ok": true, "action": "block", "ip": "10.50.0.1", "ttl": 120}
+-A LABBLOCK -s 10.50.0.1/32 -j DROP
+  REGLA PRESENTE
+
+== B. Diez bloqueos seguidos: no hay tope por tiempo en el agente
+10.50.0.31 200 {"ok": true, "action": "block", "ip": "10.50.0.31", "ttl": 120}
+10.50.0.32 200 {"ok": true, "action": "block", "ip": "10.50.0.32", "ttl": 120}
+10.50.0.33 200 {"ok": true, "action": "block", "ip": "10.50.0.33", "ttl": 120}
+10.50.0.34 200 {"ok": true, "action": "block", "ip": "10.50.0.34", "ttl": 120}
+10.50.0.35 200 {"ok": true, "action": "block", "ip": "10.50.0.35", "ttl": 120}
+10.50.0.36 200 {"ok": true, "action": "block", "ip": "10.50.0.36", "ttl": 120}
+10.50.0.37 200 {"ok": true, "action": "block", "ip": "10.50.0.37", "ttl": 120}
+10.50.0.38 200 {"ok": true, "action": "block", "ip": "10.50.0.38", "ttl": 120}
+10.50.0.39 200 {"ok": true, "action": "block", "ip": "10.50.0.39", "ttl": 120}
+10.50.0.40 200 {"ok": true, "action": "block", "ip": "10.50.0.40", "ttl": 120}
+13
+RESULTADO: FALLA (se bloqueo una IP excluida)
+--- R7/R9 2026-11-11T22:10:35-03:00 ---
+fecha=2026-11-11T22:10:35-03:00
+== Verificacion de R7 y R9 con respuestas simuladas
+== Verificación R7 (cuota / HTTP 429 / caché / estado) ==
+  [PASS] R7.1 — HTTP 429 → el flujo continúa y registra estado degraded_quota  :: status=degraded_quota
+  [PASS] R7.2 — Retry-After se lee y registra (60 s)  :: retry_after_s=60
+  [PASS] R7.3 — Cuota agotada → no reintenta dentro de Retry-After (sin nueva llamada)  :: calls=1
+  [PASS] R7.4 — HTTP 200 → puntaje y país registrados  :: status=ok score=92 country=RU
+  [PASS] R7.5 — Segunda consulta de la misma IP → servida desde caché  :: status=cached hits=1
+
+== Verificación R9 (bifurcación por puntaje) ==
+  [PASS] R9.1 — Puntaje 92 (>=75) → bloqueo automático  :: abuseConfidenceScore 92 >= 75
+  [PASS] R9.2 — Puntaje 60 (50-74) → revisión humana  :: abuseConfidenceScore 60 en el rango 50-74
+  [PASS] R9.3 — Puntaje 20 (<50) → sin bloqueo automático  :: abuseConfidenceScore 20 < 50
+  [PASS] R9.4 — Sin puntaje (cuota agotada) → sin bloqueo automático  :: enriquecimiento no disponible (sin puntaje) → sin bloqueo automático
+  [PASS] R9.5 — Borde: puntaje 75 → bloqueo automático  :: abuseConfidenceScore 75 >= 75
+
+== Comprobación de red en vivo (salida a internet) ==
+  [PASS] NET.1 — api.abuseipdb.com alcanzable; degradación controlada sin clave  :: status=error_401
+
+RESUMEN: 11/11 comprobaciones aprobadas
+Escrito: /tmp/vr7/results/r7_r9_verification.json
+JSON: lab/results/tests/r7_r9_verification_2026-11-11.json
+RESULTADO: PASA (10/10 comprobaciones simuladas de R7/R9)
+Nota: la integracion contra la API real de AbuseIPDB no se probo por ausencia de clave.
+--- DEDUP 2026-11-11T22:10:55-03:00 ---
+Timing is off.
+        fecha_ejecucion        |                                          motor                                           
+-------------------------------+------------------------------------------------------------------------------------------
+ 2026-11-12 01:10:58.474316+00 | PostgreSQL 15.19 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+CREATE TABLE
+INSERT 0 5
+  rule   | win | margen_anterior | margen_nuevo | cubre_ttl 
+---------+-----+-----------------+--------------+-----------
+ regla 2 | 600 |            1260 |          660 | t
+ regla 1 | 300 |             960 |          600 | f
+ regla 3 |  60 |             720 |          600 | f
+ regla 4 |   1 |             661 |          600 | f
+ regla 5 |   1 |             661 |          600 | f
+(5 rows)
+
+INSERT 0 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 590 s | t                  | t
+(1 row)
+
+UPDATE 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 610 s | f                  | t
+(1 row)
+
+UPDATE 1
+    caso    | suprime_margen_600 | suprime_margen_660 
+------------+--------------------+--------------------
+ edad 650 s | f                  | t
+(1 row)
+
+DELETE 1
+--- R6 2026-11-11T22:10:59-03:00 ---
+fecha=2026-11-11T22:10:59-03:00
+== A. TTL
+block 10.50.0.250 200 {"ok": true, "action": "block", "ip": "10.50.0.250", "ttl": 600}
+  regla inmediata: 1
+  esperando 630 s...
+  regla despues del TTL: 0
+
+== B. Desbloqueo manual
+block 10.50.0.251 200 {"ok": true, "action": "block", "ip": "10.50.0.251", "ttl": 600}
+  regla inmediata: 1
+unblock 10.50.0.251 200 {"ok": true, "action": "unblock", "ip": "10.50.0.251"}
+  regla despues de /unblock: 0
+
+== C. Reinicio del agente
+block 10.50.0.252 200 {"ok": true, "action": "block", "ip": "10.50.0.252", "ttl": 600}
+  regla antes del reinicio: 1
+  regla despues del reinicio (el estado en memoria se pierde): 0
+RESULTADO: PASA en A y B (el TTL expira y /unblock funciona); C documenta el estado en memoria
+--- R8 2026-11-11T22:22:18-03:00 ---
+R8 | desactivando el flujo
+  corridas registradas: 494 | ultimo run_ts: 2026-11-1201:21:36.716114+00
+  esperando 180 s para verificar si aparece un latido o una alerta de fallo...
+  alertas de latido: 0
+fecha=2026-11-11T22:25:36-03:00
+runs=494
+ultimo_run_ts=2026-11-1201:21:36.716114+00
+alertas_latido=0
+R8 | reiniciando n8n a las 2026-11-11T22:25:37-03:00
+  corridas tras el reinicio: 494 (antes: 494); ScheduleTrigger reanudo: no
+runs_tras_reinicio=494
+reanudo_schedule_trigger=no
+fecha_fin=2026-11-11T22:28:57-03:00
+RESULTADO: FALLA (no existe alerta de latido: un fallo silencioso sigue siendo indistinguible)
+  Coincide con lo declarado en la Tabla 11 (R8 parcial) y en la seccion 7.2.
+=== FIN 2026-11-11T22:28:57-03:00 ===

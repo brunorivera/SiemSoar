@@ -1,0 +1,17 @@
+fecha=2026-11-11T22:10:59-03:00
+== A. TTL
+block 10.50.0.250 200 {"ok": true, "action": "block", "ip": "10.50.0.250", "ttl": 600}
+  regla inmediata: 1
+  esperando 630 s...
+  regla despues del TTL: 0
+
+== B. Desbloqueo manual
+block 10.50.0.251 200 {"ok": true, "action": "block", "ip": "10.50.0.251", "ttl": 600}
+  regla inmediata: 1
+unblock 10.50.0.251 200 {"ok": true, "action": "unblock", "ip": "10.50.0.251"}
+  regla despues de /unblock: 0
+
+== C. Reinicio del agente
+block 10.50.0.252 200 {"ok": true, "action": "block", "ip": "10.50.0.252", "ttl": 600}
+  regla antes del reinicio: 1
+  regla despues del reinicio (el estado en memoria se pierde): 0

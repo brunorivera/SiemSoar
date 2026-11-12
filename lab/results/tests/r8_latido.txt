@@ -1,5 +1,9 @@
-runs=432
-ultimo_run_ts=2026-11-1117:33:38.707374+00
+fecha=2026-11-11T22:25:36-03:00
+runs=494
+ultimo_run_ts=2026-11-1201:21:36.716114+00
 alertas_latido=0
+runs_tras_reinicio=494
+reanudo_schedule_trigger=no
+fecha_fin=2026-11-11T22:28:57-03:00
 RESULTADO: FALLA (no existe alerta de latido: un fallo silencioso sigue siendo indistinguible)
   Coincide con lo declarado en la Tabla 11 (R8 parcial) y en la seccion 7.2.

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # R8 — Flujo de error, reintentos y alerta de latido del propio pipeline.
-# NO EJECUTADA. Resultado esperado segun el codigo medido: FALLA (no hay latido).
+# Registra la fecha de la corrida, el reinicio de n8n y si el ScheduleTrigger
+# reanuda solo. Cada corrida imprime su propia fecha.
 set -uo pipefail
 
 PG="docker exec lab-postgres psql -U admin -d security_monitoring -tAc"
@@ -24,10 +25,17 @@ sleep 180
 
 HB=$(alerts)
 echo "  alertas de latido: ${HB:-0}"
-printf 'runs=%s\nultimo_run_ts=%s\nalertas_latido=%s\n' "$R0" "$(last_run)" "$HB" \
-  | tee "$OUT/r8_latido.txt"
+printf 'fecha=%s\nruns=%s\nultimo_run_ts=%s\nalertas_latido=%s\n' \
+  "$(date -Is)" "$R0" "$(last_run)" "$HB" | tee "$OUT/r8_latido.txt"
 
+echo "R8 | reiniciando n8n a las $(date -Is)"
 docker start lab-n8n >/dev/null
+sleep 150
+R1=$(runs_before)
+if [ "${R1:-0}" -gt "${R0:-0}" ]; then RESUMED=si; else RESUMED=no; fi
+echo "  corridas tras el reinicio: $R1 (antes: $R0); ScheduleTrigger reanudo: $RESUMED"
+printf 'runs_tras_reinicio=%s\nreanudo_schedule_trigger=%s\nfecha_fin=%s\n' \
+  "$R1" "$RESUMED" "$(date -Is)" | tee -a "$OUT/r8_latido.txt"
 
 if [ "${HB:-0}" -eq 0 ]; then
   { echo "RESULTADO: FALLA (no existe alerta de latido: un fallo silencioso sigue siendo indistinguible)"

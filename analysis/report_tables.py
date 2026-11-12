@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenera las cifras cuantitativas de las Tablas 9 y 10 del informe v11.
+"""Regenera las cifras cuantitativas de las Tablas 9 y 10 del informe v12.
 
 Fuentes:
   - lab/results/n8n_e1_v2.jsonl y f2b_e1_v2.jsonl (repetición E1, 26/10/2026)
@@ -169,7 +169,7 @@ def print_descriptive(title, rows):
 
 def main():
     print('=' * 78)
-    print('REPORT_TABLES.PY - cifras de las Tablas 9 y 10 (informe v5, 28/10/2026)')
+    print('REPORT_TABLES.PY - cifras de las Tablas 9 y 10 (informe v12, 11/11/2026)')
     print('=' * 78)
     print()
 

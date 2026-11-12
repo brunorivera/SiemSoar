@@ -1,3 +1,4 @@
+fecha=2026-11-11T22:10:03-03:00
 == A. Bloqueo de la IP excluida 10.50.0.1
 10.50.0.1 200 {"ok": true, "action": "block", "ip": "10.50.0.1", "ttl": 120}
 -A LABBLOCK -s 10.50.0.1/32 -j DROP
@@ -15,3 +16,4 @@
 10.50.0.39 200 {"ok": true, "action": "block", "ip": "10.50.0.39", "ttl": 120}
 10.50.0.40 200 {"ok": true, "action": "block", "ip": "10.50.0.40", "ttl": 120}
 13
+RESULTADO: FALLA (se bloqueo una IP excluida)

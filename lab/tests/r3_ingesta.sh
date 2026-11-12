@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # R3 — Lectura de logs con el nodo de archivos o con una ingesta por webhook, y
-# declaracion de la configuracion de n8n que lo habilita. NO EJECUTADA.
+# declaracion de la configuracion de n8n que lo habilita. Cada corrida imprime su fecha.
 #
 # Esta prueba documenta el incumplimiento: el pipeline lee con fs dentro del nodo
 # Code y depende de NODE_FUNCTION_ALLOW_BUILTIN, que tambien habilita child_process.
@@ -11,13 +11,17 @@ mkdir -p "$OUT"
 LOG="$OUT/r3_ingesta.txt"
 
 {
+  echo "fecha=$(date -Is)"
   echo "== 1. Variables de entorno del contenedor n8n"
   docker exec lab-n8n sh -c 'env | grep -E "NODE_FUNCTION_ALLOW|N8N_RESTRICT_FILE_ACCESS_TO|N8N_RUNNERS"' || true
   echo
-  echo "== 2. Uso de require() en el codigo medido"
+  echo "== 2. Configuracion que habilita la lectura en lab/docker-compose.yml"
+  grep -n -E "NODE_FUNCTION_ALLOW|N8N_RESTRICT_FILE_ACCESS_TO|N8N_BLOCK_ENV_ACCESS_IN_NODE" lab/docker-compose.yml || true
+  echo
+  echo "== 3. Uso de require() en el codigo medido"
   grep -n "require(" lab/pipeline.js || true
   echo
-  echo "== 3. Nodos del flujo medido"
+  echo "== 4. Nodos del flujo medido"
   grep -o '"type": *"[^"]*"' lab/pipeline-wf.json | sort -u || true
 } | tee "$LOG"
 
