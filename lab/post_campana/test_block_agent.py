@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prueba unitaria local del agente de bloqueo seguro (P-06 post-campaña)."""
+"""Prueba unitaria local del agente de bloqueo seguro (post-campaña)."""
 import os
 import sys
 import threading

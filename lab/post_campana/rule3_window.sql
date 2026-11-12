@@ -1,4 +1,4 @@
--- Corrección post-campaña N-12: la regla 3 (Port Scan Detection) tenía
+-- Corrección post-campaña: la regla 3 (Port Scan Detection) tenía
 -- time_window = 60 s, igual al período de sondeo del pipeline (60 s).
 -- R1 exige T < ventana; se lleva la ventana a 120 s.
 -- No se aplica al artefacto medido: lab/scripts/seed_rules.sql no se modifica.

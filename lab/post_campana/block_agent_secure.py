@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agente de bloqueo con autenticación por token y validación estricta de IPv4 (P-06 post-campaña).
+"""Agente de bloqueo con autenticación por token y validación estricta de IPv4 (post-campaña).
 
 POSTERIOR A LA CAMPAÑA Y NO MEDIDO.
 El artefacto medido es `lab/victim/block_agent.py`, que se conserva sin cambios.

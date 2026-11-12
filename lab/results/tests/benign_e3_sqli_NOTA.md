@@ -1,4 +1,4 @@
-# Nota sobre el estrato benigno con patrón SQLi (N-14)
+# Nota sobre el estrato benigno con patrón SQLi
 
 Fecha: 11 de noviembre de 2026.
 
@@ -14,8 +14,8 @@ Evidencia cruda: `lab/results/benign_e3_sqli.jsonl` (lote A) y
 
 - Lote A (10.50.0.230–10.50.0.239): 10 alertas `SQL Injection Pattern`, sin bloqueo.
 - Lote B (10.50.0.240–10.50.0.249): 10 alertas y 10 bloqueos (`LABBLOCK`, TTL 600 s).
-- Total: 20/20 alertas, 20/20 bloqueos con el brazo n8n, FPR 1,00; IC 95 % de
-  Wilson [0,839; 1].
+- Total: 20/20 alertas y 10/20 bloqueos (solo el lote B, con brazo n8n), FPR 1,00;
+  IC 95 % de Wilson [0,839; 1].
 
 ## Discrepancia del campo `arm`
 

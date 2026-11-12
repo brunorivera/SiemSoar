@@ -4,7 +4,7 @@
 
 El artefacto medido conserva `lab/victim/jail.local` únicamente con la cárcel `[sshd]`.
 
-## 1. Motivación (N-22)
+## 1. Motivación
 En la campaña ejecutada, Fail2ban solo contó con la cárcel para SSH (`auth.log`), por lo que no se midió en E2 (escaneo de puertos) ni en E3 (inyección SQL). Para documentar el intento de comparación en igualdad de condiciones, se desarrollaron los filtros correspondientes.
 
 ## 2. Archivos diseñados

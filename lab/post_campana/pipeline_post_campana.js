@@ -204,7 +204,7 @@ async function main() {
          ON CONFLICT (source_ip, pattern_type) DO UPDATE SET last_seen=now(), occurrence_count=attack_patterns.occurrence_count+$3`,
         [rule.name, ip, h.c]);
 
-      // --- Respuesta activa con token (correccion P-06) ---
+      // --- Respuesta activa con token (corrección post-campaña) ---
       if (arm === 'n8n') {
         try {
           await new Promise((res) => {

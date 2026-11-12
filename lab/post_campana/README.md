@@ -5,7 +5,7 @@ Estos archivos **no** son el artefacto medido y no deben aplicarse al commit
 campaña nueva y un manifiesto nuevo. El artefacto medido se conserva en
 `lab/pipeline.js`, `lab/victim/block_agent.py` y `lab/docker-compose.yml`.
 
-## 1. Horizonte de ingesta y deduplicado (P-05 / U-01 / W-02)
+## 1. Horizonte de ingesta y deduplicado
 
 `lab/post_campana/pipeline.post_campana.diff` cambia dos cosas:
 
@@ -47,7 +47,7 @@ Después hay que regenerar `lab/pipeline-wf.json` con `lab/build_workflow.py`,
 volver a importar el flujo, ejecutar `lab/tests/` y actualizar el manifiesto. Los
 resultados publicados no cambian: la campaña midió el código anterior.
 
-## 2. Agente de bloqueo (P-06)
+## 2. Agente de bloqueo
 
 `lab/post_campana/block_agent_secure.py` exige `X-Block-Token` en `/block`,
 `/unblock`, `/reset` y `/blocked`; no arranca sin `BLOCK_AGENT_TOKEN`; valida
@@ -65,7 +65,7 @@ El pipeline medido no envía el token; para usar el agente seguro en una campañ
 nueva hay que añadir el encabezado `X-Block-Token` a la llamada de bloqueo y
 regenerar el flujo. El agente seguro no forma parte de la medición publicada.
 
-## 3. Imágenes fijadas por digest (N-28)
+## 3. Imágenes fijadas por digest
 
 `lab/docker-compose.pinned.yml` es un override para una campaña nueva:
 
@@ -82,7 +82,7 @@ publicada y su hash figura en los manifiestos. El override fija
 `docker.n8n.io/n8nio/n8n@sha256:dd580fe1…`, y exige `POSTGRES_PASSWORD`,
 `N8N_ENCRYPTION_KEY` y `BLOCK_AGENT_TOKEN` por entorno.
 
-## 4. Regla 3: ventana de 120 s (N-12)
+## 4. Regla 3: ventana de 120 s
 
 `lab/post_campana/rule3_window.sql` lleva `detection_rules.time_window` de la
 regla 3 (`Port Scan Detection`) de 60 s a 120 s. La ventana de 60 s igualaba el
@@ -90,7 +90,7 @@ período de sondeo del pipeline (60 s), de modo que R1 no podía cumplirse; con
 120 s, T < ventana. No se aplica al artefacto medido:
 `lab/scripts/seed_rules.sql` no se modifica.
 
-## 5. Unidades benignas de SQLi (N-14)
+## 5. Unidades benignas de SQLi
 
 Se ejecutó post-campaña, con el brazo `f2b` y con el brazo `n8n`:
 
@@ -103,8 +103,8 @@ Se ejecutó post-campaña, con el brazo `f2b` y con el brazo `n8n`:
 Los datos están en `lab/results/benign_e3_sqli.jsonl` (f2b) y
 `lab/results/benign_e3_sqli_n8n.jsonl` (n8n); el resumen y la conclusión, en
 `lab/results/tests/benign_e3_sqli.txt`. La fila de la Tabla 10 del informe
-corresponde al estrato benigno con patrón del brazo n8n: VP=10, FN=0, FP=10,
-VN=0, precisión 0,50, FPR 1,00. No forma parte de `lab/results/*.jsonl` del
+corresponde al estrato completo de 20 unidades: VP/FN/precisión «—», FP=20, VN=0,
+FPR 1,00; 20/20 alertas y 10/20 bloqueos (solo el lote con brazo n8n). No forma parte de `lab/results/*.jsonl` del
 manifiesto y no se usa para H3.
 
 ## 6. Verificación mínima antes de publicar
