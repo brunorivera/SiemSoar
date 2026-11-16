@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIEM &amp; SOAR — Panel de demostración</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>SIEM &amp; SOAR — Panel de demostración</h1>
+      <p class="subtitle">
+        Análisis automatizado de registros y detección de anomalías con n8n ·
+        prototipo autocontenido FastAPI + SQLite
+      </p>
+    </div>
+    <div class="topbar-actions">
+      <span id="conn-status" class="pill pill-wait" title="Estado de /api/dashboard">Conectando…</span>
+      <button id="reset-btn" class="btn btn-ghost" type="button">
+        Reiniciar demo
+      </button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- 1. Simulación -->
+    <section class="panel panel-sim">
+      <header class="panel-head">
+        <div>
+          <h2><span class="num">1</span> Panel de simulación</h2>
+          <p class="panel-lead">
+            Genera ráfagas de log realistas y ejecuta el ciclo de evaluación.
+            Cada botón inyecta la ráfaga y corre el pipeline automáticamente.
+          </p>
+        </div>
+        <span class="hint">Generador de tráfico</span>
+      </header>
+
+      <div class="sim-grid">
+        <button class="btn btn-attack" type="button" data-scenario="ssh_bruteforce">
+          <span>Simular fuerza bruta SSH</span>
+          <small>5 intentos / 300 s</small>
+        </button>
+        <button class="btn btn-attack" type="button" data-scenario="port_scan">
+          <span>Simular escaneo de puertos</span>
+          <small>20 SYN / 60 s</small>
+        </button>
+        <button class="btn btn-attack" type="button" data-scenario="sqli">
+          <span>Simular inyección SQL</span>
+          <small>1 evento / 1 s</small>
+        </button>
+        <button class="btn btn-attack" type="button" data-scenario="root_login">
+          <span>Simular login root</span>
+          <small>1 evento / 1 s · crítico</small>
+        </button>
+        <button class="btn btn-attack" type="button" data-scenario="sudo_abuse">
+          <span>Simular abuso de sudo</span>
+          <small>10 eventos / 600 s</small>
+        </button>
+        <button class="btn btn-benign" type="button" data-scenario="benign">
+          <span>Inyectar tráfico benigno</span>
+          <small>sin coincidencia de reglas</small>
+        </button>
+      </div>
+
+      <div class="control-row">
+        <label class="field">
+          <span>IP de origen (opcional)</span>
+          <input id="source-ip" type="text" placeholder="203.0.113.10" autocomplete="off" spellcheck="false" />
+        </label>
+        <button id="cycle-btn" class="btn btn-primary" type="button">
+          Ejecutar ciclo del pipeline
+        </button>
+      </div>
+
+      <button class="btn btn-exclude" type="button" data-scenario="ssh_bruteforce" data-fixed-ip="10.50.0.1">
+        Probar exclusión R5 (10.50.0.1)
+        <small>Debe contabilizar eventos sin alerta ni bloqueo</small>
+      </button>
+
+      <details class="custom-box">
+        <summary>Ingesta manual de líneas de log</summary>
+        <textarea id="custom-lines" rows="6" spellcheck="false"
+          placeholder="Nov 13 10:00:00 lab-victim sshd[1234]: Failed password for invalid user admin from 203.0.113.77 port 40001 ssh2&#10;203.0.113.78 - - [13/Nov/2026:10:00:01 +0000] &quot;GET /x.php?id=1 UNION SELECT 1 FROM users-- HTTP/1.1&quot; 200 512"></textarea>
+        <div class="custom-actions">
+          <button id="custom-btn" class="btn" type="button">Ingestar y evaluar</button>
+          <span class="micro-hint">Ctrl + Enter también envía</span>
+        </div>
+      </details>
+
+      <div id="action-log" class="action-log" aria-live="polite">
+        <span class="log-time">--:--:--</span> Listo. Ejecuta una simulación o inyecta líneas.
+      </div>
+    </section>
+
+    <!-- 2. Métricas -->
+    <section class="panel panel-metrics">
+      <header class="panel-head">
+        <div>
+          <h2><span class="num">2</span> Métricas del pipeline</h2>
+          <p class="panel-lead">Estado en vivo de la ingesta, la correlación y la respuesta.</p>
+        </div>
+        <span id="last-run" class="hint">Último ciclo: —</span>
+      </header>
+
+      <div id="metrics-grid" class="metrics-grid"></div>
+
+      <div class="chips-row">
+        <span class="chips-label">Exclusiones R5</span>
+        <span class="chip chip-excl">10.50.0.1</span>
+        <span class="chip chip-excl">127.0.0.1</span>
+        <span class="chips-label">GRACE</span>
+        <span id="grace-chip" class="chip">600 s</span>
+        <span class="chips-label">TTL bloqueo</span>
+        <span id="ttl-chip" class="chip">600 s</span>
+      </div>
+
+      <h3 class="subhead">Reglas activas (Tabla 7)</h3>
+      <div id="rules-list" class="rules-list"></div>
+
+      <h3 class="subhead">Últimos ciclos (<code>pipeline_runs</code>)</h3>
+      <div class="table-wrap compact">
+        <table id="runs-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hora</th>
+              <th>Disparador</th>
+              <th>Líneas</th>
+              <th>Eventos</th>
+              <th>Alertas</th>
+              <th>ms</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. Alertas -->
+    <section class="panel panel-alerts">
+      <header class="panel-head">
+        <div>
+          <h2><span class="num">3</span> Alertas y bitácora</h2>
+          <p class="panel-lead">
+            Tabla <code>alerts</code>: regla disparada, IP de origen, severidad y estado.
+          </p>
+        </div>
+        <span id="alerts-count" class="hint">0 alertas</span>
+      </header>
+
+      <div class="table-wrap tall">
+        <table id="alerts-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>IP origen</th>
+              <th>Regla</th>
+              <th>Severidad</th>
+              <th>Eventos</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="footnote" id="alerts-footnote">
+        Las alertas auto-bloqueadas pasan a <code>resolved</code>; las IPs excluidas quedan sin bloqueo.
+      </p>
+    </section>
+
+    <!-- 4. Respuesta activa -->
+    <section class="panel panel-response">
+      <header class="panel-head">
+        <div>
+          <h2><span class="num">4</span> Respuesta activa</h2>
+          <p class="panel-lead">
+            IPs bloqueadas por el SOAR con TTL de 600 s. El botón retira el bloqueo (R6).
+          </p>
+        </div>
+        <span class="hint">Bloqueos + <code>/unblock</code></span>
+      </header>
+
+      <div class="table-wrap medium">
+        <table id="blocks-table">
+          <thead>
+            <tr>
+              <th>IP</th>
+              <th>Regla</th>
+              <th>Bloqueada</th>
+              <th>Expira</th>
+              <th>TTL restante</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="footnote">
+        La expiración del TTL y <code>/api/unblock</code> retiran el bloqueo activo. Las IPs
+        <code>10.50.0.1</code> y <code>127.0.0.1</code> nunca se bloquean (R5).
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Prototipo de demostración · datos simulados en <code>prototype_ui/data/prototype.db</code> ·
+    no modifica <code>lab/</code>, <code>analysis/</code> ni <code>Database/</code>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
